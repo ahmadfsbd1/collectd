@@ -1,0 +1,14 @@
+# Maintained by juju. Local changes will be lost
+
+<Plugin write_graphite>
+    <Node "graphite-server">
+        Host "{{ config.graphite_host }}"
+        Port "{{ config.graphite_port }}"
+        Protocol "{{ config.graphite_protocol }}"
+        LogSendErrors true
+        Prefix "{{ config.graphite_prefix }}"
+        StoreRates true
+        AlwaysAppendDS false
+        EscapeCharacter "_"
+    </Node>
+</Plugin>

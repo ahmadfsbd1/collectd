@@ -1,0 +1,24 @@
+#---------------------------------------------------
+# This file is Juju managed
+#---------------------------------------------------
+# Set the command-line arguments to pass to the server.
+ARGS="
+{%- for arg in args -%}
+{{ arg }} {% endfor -%}
+"
+# Prometheus collectd exporter supports the following arguments
+#  -collectd.auth-file string
+#       File mapping user names to pre-shared keys (passwords).
+#  -collectd.listen-address string
+#       Network address on which to accept collectd binary network packets, e.g. ":25826".
+#  -collectd.security-level string
+#       Minimum required security level for accepted packets. Must be one of "None", "Sign" and "Encrypt". (default "None")
+#  -log.level value
+#       Only log messages with the given severity or above. Valid levels: [debug, info, warn, error, fatal, panic]. (default info)
+#  -web.collectd-push-path string
+#       Path under which to accept POST requests from collectd. (default "/collectd-post")
+#  -web.listen-address string
+#       Address on which to expose metrics and web interface. (default ":9103")
+#  -web.telemetry-path string
+#       Path under which to expose Prometheus metrics. (default "/metrics")
+

@@ -1,0 +1,115 @@
+options:
+  plugins:
+    type: string
+    default: 'default'
+    description: >
+      Comma separated list of plugins to enable. If set to "default"
+      list of plugins will match defaults shipped with Ubuntu package
+  interval:
+    type: int
+    default: 10
+    description: Interval at which to query values by default
+  hostname_type:
+    type: string
+    default: ""
+    description: >
+      Controls how hostname is determined by collectd. Accepted values are:
+        fqdn - sets "FQDNLookup true" in the collectd.conf
+        hostname - use python socket.gethostname() to get hostname. Useful in
+                   clouds where FQDN lookup does not work
+
+      If unset or set to empty string defaults to fqdn
+  extra_config:
+    type: string  
+    default: ""
+    description: >
+        Extra plugin configuration added and enabled based on the option 'plugins'. No pre-installation validation for the added config lines. Note: To enable the plugins, add plugins: "syslog, df" example:
+          <Plugin "syslog">
+            LogLevel "info"
+            NotifyLevel "OKAY"
+          </Plugin>
+        
+          <Plugin "df">
+            IgnoreSelected true
+          </Plugin>
+  prometheus_export:
+    type: string
+    default: ""
+    description: >
+      If set collectd will be configured to publish metrics to prometheus graphite_exporter
+      service using write_http plugin. If host is set to 127.0.0.1 the charm will install
+      collectd_exporter package which must be available for installation.
+      See "install_sources" and "install_keys".
+      Please note that it is also possible to send metric to remote collectd_exporter using
+      collectd binary protocol. This can be done using "network_target" option. Examples:
+
+        To send metrics to remote collectd_exporter instance using http POST to "/my-post-url":
+          http://remote.host.example.com:9103/my-post-url
+
+        To install collectd_exporter locally and expose metrics for prometheus scraping
+        under "/metrics" URI set this option to:
+          http://127.0.0.1:9103/metrics
+      If set to "True", it'll default to "http://127.0.0.1:9103/metrics", specially
+      handy if you're relating it to prometheus service, as this setting is still needed
+      for the relation to work.
+  prometheus_output_port: 
+    default: "9104"
+    description: >
+      If set write_prometheus output plugin will be configured to listen on the provided port. If set to string "default" the charm will use default port (9104)"
+    type: string
+  install_sources:
+    default: ""
+    type: string
+    description: |
+        YAML list of additional installation sources, as a string. The number of
+        install_sources must match the number of install_keys. For example:
+          install_sources: |
+           - ppa:project1/ppa
+           - ppa:project2/ppa
+  install_keys:
+    default: ""
+    type: string
+    description: |
+        YAML list of GPG keys for installation sources, as a string. For apt repository
+        URLs, use the public key ID used to verify package signatures. For 
+        other sources such as PPA, use empty string. This list must have the 
+        same number of elements as install_sources, even if the key items are 
+        all empty string. An example to go with the above for install_sources:
+          install_keys: |
+           - ""
+           - ""
+  graphite_endpoint:
+    type: string
+    default: ""
+    description: >
+      Optional graphite hostname(or IP) and port. For example:
+          graphite.example.com:2003
+      If set write_graphite will be enabled and configured
+  graphite_protocol:
+    type: string
+    default: 'TCP'
+    description: TCP or UDP. Only used if graphite_endpoint is set
+  graphite_prefix:
+    type: string
+    default: 'collectd.'
+    description: Prepended to unit hostname in graphite. Only used in graphite_endpoint is set
+  network_target:
+    type: string
+    default: ""
+    description: >
+      Configured collectd to send data over network to remote collectd intance. Example:
+        192.168.99.99:25826
+  nagios_context:
+    default: "juju"
+    type: string
+    description: |
+      A string that will be prepended to instance name to set the host name
+      in nagios. So for instance the hostname would be something like:
+          juju-myservice-0
+      If you're running multiple environments with the same services in them
+      this allows you to differentiate between them.
+  nagios_servicegroups:
+    default: "juju"
+    type: string
+    description: |
+      Comma separated list of nagios servicegroups for the graphite check

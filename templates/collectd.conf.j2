@@ -1,0 +1,39 @@
+# Config file for collectd(1).
+# Maintained by juju, manual changes will be lost
+
+##############################################################################
+# Global                                                                     #
+##############################################################################
+
+{%- if config['hostname'] == "fqdn" %}
+FQDNLookup true
+{%- else %}
+Hostname "{{ config.hostname }}"
+{%- endif %}
+
+Interval {{ config.interval }}
+
+##############################################################################
+# LoadPlugin section                                                         #
+##############################################################################
+
+{% for plugin in plugins -%}
+LoadPlugin {{ plugin }}
+{% endfor %}
+
+##############################################################################
+# Monitoring                                                                 #
+##############################################################################
+LoadPlugin write_prometheus
+<Plugin write_prometheus>
+    Port "{{ config.prometheus_output_port}}"
+</Plugin>
+
+##############################################################################
+# Include extra configs                                                      #
+##############################################################################
+
+<Include "/etc/collectd/collectd.conf.d">
+        Filter "*.conf"
+</Include>
+
