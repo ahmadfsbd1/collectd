@@ -3,4 +3,4 @@ ignore: ['.*.swp' ]
 options:
   basic:
     use_venv: true
-repo: https://git.launchpad.net/collectd-daemon
+repo: https://github.com/psreekrishnan/collectd

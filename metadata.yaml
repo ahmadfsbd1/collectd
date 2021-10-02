@@ -1,8 +1,7 @@
 name: collectd
 summary: Statistics collection and monitoring daemon
 maintainer: >-
-  Sreekrishnan P <sreekrishnan.p@bt.com, krishna.u73@gmail.com>, open-charmers
-  <open-charmers@lists.launchpad.net>
+  Sreekrishnan P <sreekrishnan.p@bt.com>
 description: |
   collectd is a small daemon which collects system information
   periodically and provides mechanisms to monitor and store the values
@@ -12,8 +11,7 @@ description: |
   updated every 10 seconds by default.  The collected information can be
   used to find current performance bottlenecks (performance analysis)
   and predict future system load (capacity planning).
-  This charm was initially developed and maintained by
-  Prometheus Charmers <prometheus-charmers@lists.launchpad.net>
+  This charm was initially developed and maintained by Prometheus Charmers.
 tags:
   - monitoring
 series:

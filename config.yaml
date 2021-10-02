@@ -32,31 +32,17 @@ options:
           <Plugin "df">
             IgnoreSelected true
           </Plugin>
-  prometheus_export:
-    type: string
-    default: ""
-    description: >
-      If set collectd will be configured to publish metrics to prometheus graphite_exporter
-      service using write_http plugin. If host is set to 127.0.0.1 the charm will install
-      collectd_exporter package which must be available for installation.
-      See "install_sources" and "install_keys".
-      Please note that it is also possible to send metric to remote collectd_exporter using
-      collectd binary protocol. This can be done using "network_target" option. Examples:
-
-        To send metrics to remote collectd_exporter instance using http POST to "/my-post-url":
-          http://remote.host.example.com:9103/my-post-url
-
-        To install collectd_exporter locally and expose metrics for prometheus scraping
-        under "/metrics" URI set this option to:
-          http://127.0.0.1:9103/metrics
-      If set to "True", it'll default to "http://127.0.0.1:9103/metrics", specially
-      handy if you're relating it to prometheus service, as this setting is still needed
-      for the relation to work.
   prometheus_output_port: 
     default: "9104"
     description: >
       If set write_prometheus output plugin will be configured to listen on the provided port. If set to string "default" the charm will use default port (9104)"
     type: string
+  default_package: 
+    default: true
+    description: |
+        If set to False, packages added under files/ are considered. 
+        Version: 5.11, Repo source: archive.ubuntu.com
+    type: boolean
   install_sources:
     default: ""
     type: string

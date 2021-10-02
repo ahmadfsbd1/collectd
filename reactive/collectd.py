@@ -15,9 +15,6 @@ if six.PY2:
 else:
     import urllib.parse as urlparse
 
-# When prometheus_export=True
-DEFAULT_PROMETHEUS_EXPORT = 'http://127.0.0.1:9103/metrics'
-
 
 @when_not('collectd.started')
 @when_not('collectd.stopped')
@@ -37,30 +34,8 @@ def setup_collectd():
            context=settings,
            )
 
-    if config.get('http_endpoint', False) and config['http_endpoint'].startswith('127.0.0.1'):
-        args = [
-            '-web.listen-address :{}'.format(config['prometheus_export_port']),
-            '-web.telemetry-path {}'.format(config['prometheus_export_path']),
-        ]
-        render(source='prometheus-collectd-exporter.j2',
-               target='/etc/default/prometheus-collectd-exporter',
-               context={'args': args},
-               )
-
-        update_prometheus_exporter_port(config)
-
     set_state('collectd.start')
     hookenv.status_set('active', 'Ready')
-
-
-def update_prometheus_exporter_port(config):
-    kv = unitdata.kv()
-    if kv.get('prometheus_exporter_port') != config['prometheus_export_port']:
-        hookenv.open_port(config['prometheus_export_port'])
-        if kv.get('prometheus_exporter_port'):  # Don't try to close non existing ports
-            hookenv.close_port(kv.get('prometheus_exporter_port'))
-        kv.set('prometheus_exporter_port', config['prometheus_export_port'])
-    set_state('prometheus-exporter.start')
 
 
 @when('collectd.started')
@@ -123,12 +98,14 @@ def validate_settings():
 
 
 def install_packages():
-    packages = ['collectd-core']
-    config = resolve_config()
-    if config.get('http_endpoint', False) and config['http_endpoint'].startswith('127.0.0.1'):
-        # XXX comes from aluria's PPA, check if there is upstream package available
-        hookenv.log('prometheus_export set to localhost, installing exporter locally')
-        packages.append('prometheus-collectd-exporter')
+    config = hookenv.config()
+    packages = []
+    if config.get('default_package', False):
+        packages.append('collectd')
+    else:
+        packages.append(os.path.abspath('files/collectd.deb'))
+        packages.append(os.path.abspath('files/collectd-core.deb'))
+
     fetch.configure_sources()
     fetch.apt_update()
     fetch.apt_install(packages)
@@ -148,7 +125,7 @@ def remove_collectd():
 
 @when('collectd.stopped')
 def uninstall_packages():
-    packages = ['collectd-core']
+    packages = ['collectd-core', 'collectd']
     hookenv.log('Uninstalling collectd packages...')
     fetch.apt_purge(packages)
 
@@ -168,8 +145,6 @@ def get_plugins():
         plugins.append('write_graphite')
     if config.get('network_target', False):
         plugins.append('network')
-    if config.get('prometheus_export', False):
-        plugins.append('write_http')
     if 'write_prometheus' in plugins:
         plugins.remove('write_prometheus')          # 'write_prometheus' enabled by default
 
@@ -210,23 +185,6 @@ def install_conf_d(plugins):
         os.unlink(extra_config_target)
 
 
-    # Note:- Commenting below lines, to support extra_config option and any external conf files.
-
-    # for config in glob.glob('/etc/collectd/collectd.conf.d/juju_*.conf'):
-    #     config_regex = '/etc/collectd/collectd.conf.d/juju_(.+).conf'
-    #     if re.match(config_regex, config).group(1) not in plugins:
-    #         hookenv.log('Clearing unused configuration file: {}'.format(config))
-    #         os.unlink(config)
-
-
-def get_prometheus_export():
-    config = hookenv.config()
-    prometheus_export = config.get('prometheus_export', False)
-    if prometheus_export is True or prometheus_export in ("True", "true"):
-        prometheus_export = DEFAULT_PROMETHEUS_EXPORT
-    return prometheus_export
-
-
 def get_prometheus_port():
     config = hookenv.config()
     prometheus_output_port = 9104
@@ -244,17 +202,6 @@ def resolve_config():
     if config.get('graphite_endpoint', False):
         config['graphite_host'], config['graphite_port'] = config['graphite_endpoint'].split(':')
         config['graphite_port'] = int(config['graphite_port'])
-    if get_prometheus_export():
-        prometheus_export = urlparse.urlparse(get_prometheus_export())
-        config['http_endpoint'] = prometheus_export.netloc
-        config['http_format'] = 'JSON'
-        config['http_rates'] = 'false'
-        if config['http_endpoint'].startswith('127.0.0.1') or config['http_endpoint'].startswith('localhost'):
-            config['http_path'] = '/collectd-post'
-            config['prometheus_export_path'] = prometheus_export.path
-            config['prometheus_export_port'] = int(config['http_endpoint'].split(':')[1])
-        else:
-            config['http_path'] = prometheus_export.path
     if config.get('network_target', False):
         config['network_host'], config['network_port'] = config['network_target'].split(':')
         config['network_port'] = int(config['network_port'])
@@ -288,22 +235,6 @@ def handle_config_changes():
         host.service_restart('collectd')    # Job type reload is not applicable for unit collectd.service
 
 
-@when('prometheus-exporter.start')
-def start_prometheus_exporter():
-    if not host.service_running('prometheus-collectd-exporter'):
-        hookenv.log('Starting prometheus-collectd-exporter...')
-        host.service_start('prometheus-collectd-exporter')
-        set_state('prometheus-exporter.started')
-    if any_file_changed(['/etc/default/prometheus-collectd-exporter']):
-        # Restart, reload breaks it
-        hookenv.log('Restarting prometheus-collectd-exporter, config file changed...')
-        host.service_restart('prometheus-collectd-exporter')
-    remove_state('prometheus-exporter.start')
-
-
 @when('target.available')
 def configure_prometheus_relation(target):
-    config = resolve_config()
-    if config.get('prometheus_export_port', False):
-        target.configure(config.get('prometheus_export_port'))
     target.configure(get_prometheus_port())
