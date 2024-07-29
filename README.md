@@ -2,7 +2,7 @@
 
 This subordinate charm will deploy collectd daemon
 
-Supports: Trusty, Bionic, Focal
+Supports: Focal, Jammy
 
 
 ### Prometheus Output

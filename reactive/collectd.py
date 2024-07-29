@@ -1,7 +1,6 @@
 import os
 import re
 import glob
-import six
 import socket
 from charmhelpers import fetch
 from charmhelpers.core import host, hookenv, unitdata
@@ -9,11 +8,7 @@ from charmhelpers.core.templating import render
 from charms.reactive import when, when_not, remove_state, set_state
 from charms.reactive.helpers import any_file_changed, data_changed
 from charms.reactive import hook
-
-if six.PY2:
-    import urlparse
-else:
-    import urllib.parse as urlparse
+import urllib.parse as urlparse
 
 
 @when_not('collectd.started')

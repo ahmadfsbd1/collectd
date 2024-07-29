@@ -15,9 +15,8 @@ description: |
 tags:
   - monitoring
 series:
-  - trusty
-  - bionic
   - focal
+  - jammy
 subordinate: true
 requires:
   host:
